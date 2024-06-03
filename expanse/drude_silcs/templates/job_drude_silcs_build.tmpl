@@ -1,0 +1,33 @@
+#!/bin/bash
+#SBATCH --output <jobname>-<run>-build.out
+#SBATCH --job-name <jobname>-<run>-build
+#SBATCH --ntasks 48
+#SBATCH --nodes=1
+#SBATCH -t 24:00:00
+#SBATCH -p <qname>
+#SBATCH -A <account>
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=<email>
+
+qname=<qname>
+account=<account>
+email=<email>
+sysname=<sysname>
+drudedir=<drudedir>
+run=<run>
+nproc=<nproc>
+
+module reset
+module load cpu/0.17.3b
+module load gcc/10.2.0/npcyll4
+module load openmpi/4.1.3/oq3qvsv
+
+export CHARMM_MPI=/expanse/lustre/projects/vpt121/jalemkul/software/charmm/c48b1.MPI
+
+for j in {10..100..10}; do
+    if cd ${drudedir}/${run}/${j}/build ; then
+        mpirun -np 48 ${CHARMM_MPI} -i write_drude_psf_silcs.inp -o write_drude.out
+    else 
+        echo "${drudedir}/${run}/${j}/build does not exist. Maybe you should have thought of that before submitting this script. -Patrick"
+    fi
+done
