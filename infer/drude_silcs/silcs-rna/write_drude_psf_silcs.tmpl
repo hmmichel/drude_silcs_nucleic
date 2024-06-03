@@ -1,0 +1,148 @@
+* Generates PSF with Drude FF 
+* CHANGE BOX SIZE AND FFT FOR YOUR SYSTEM
+
+dimens chsize 1000000
+
+! master/protein file
+!****** insert general directory where we can find these drude silcs toppars *******
+bomlev -2
+stream <topstr>/toppar_drude_silcs_charmm.str 
+bomlev 0
+
+! open relevant system properties
+stream system_properties.str 
+
+set sys <sysname> 
+
+read sequ card
+* DNAA
+*
+@ndnaa
+@seq
+generate DNAA first 5TER last 3TER setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+
+set i 1
+set nres @ndnaa 
+label patch1
+    patch deox dnaa @i setup warn
+    incr i by 1
+if i .lt. @nres goto patch1
+patch deo3 dnaa @nres setup warn
+
+autogenerate angles dihedrals drude
+
+read sequence POT @nheta 
+generate HETA first none last none setup warn noangle nodihedral drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+
+if @nacey .gt. 0 then
+    read sequence ACEY @nacey 
+    generate ACEY first none last none setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+endif
+
+if @nbenx .gt. 0 then
+    read sequence BENX @nbenx
+    generate BENX first none last none setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+endif
+
+if @ndmee .gt. 0 then
+    read sequence DMEE @ndmee 
+    generate DMEE first none last none setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+endif
+
+if @nform .gt. 0 then
+    read sequence FORM @nform 
+    generate FORM first none last none setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+endif
+
+if @nimid .gt. 0 then
+    read sequence IMID @nimid 
+    generate IMID first none last none setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+endif
+
+if @nmamy .gt. 0 then
+    read sequence MAMY @nmamy 
+    generate MAMY first none last none setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+endif
+
+if @nmeoh .gt. 0 then
+    read sequence MEOH @nmeoh 
+    generate MEOH first none last none setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+endif
+
+if @nprpx .gt. 0 then
+    read sequence PRPX @nprpx 
+    generate PRPX first none last none setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+endif
+
+read sequence SWM4 @nsolv 
+generate SOLV first none last none setup warn noangle nodihedral drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+
+! write the topology
+open write card unit 10 name @{sys}.drude.silcs.xplor.psf
+write psf card xplor unit 10
+close unit 10
+
+bomlev -1   ! because there will be missing coordinates, which is OK at this point
+open read unit 10 card name @{sys}_converted_drude.pdb 
+read coor unit 10 pdb resid 
+
+ic param
+ic build
+
+coor sdrude
+coor shake
+coor print
+bomlev 0
+
+coor stat sele segid DNAA end ! where "segid X" the segment(s) you want centered
+coor trans xdir ?XAVE fact -1.0
+coor trans ydir ?YAVE fact -1.0
+coor trans zdir ?ZAVE fact -1.0
+
+coor print
+
+! write un-minimized coords
+open write unit 10 card name @{sys}_init_drude.crd
+write coor unit 10 card
+
+open write unit 10 card name @{sys}_init_drude.pdb
+write coor unit 10 pdb
+
+!! imaging and PBC
+!! IMPORTANT: change the box size to fit your system
+!!            change the FFT grid size (about 1 pt per Angstrom)
+crystal define @shape @boxx @boxy @boxz @alp @bet @gam 
+crystal build cutoff 10. noper 0
+
+coor stat sele segid DNAA end
+image byseg xcen ?XAVE ycen ?YAVE zcen ?ZAVE sele segid DNAA end
+image byres xcen ?XAVE ycen ?YAVE zcen ?ZAVE sele .not. segid DNAA end
+
+! calculate Fourier grid
+system "python2 checkfft.py ?XTLA ?XTLB ?XTLC > checkfft.str"
+stream checkfft.str
+
+nbonds atom vatom switch vswitch -
+    cutnb 14.0 ctonnb 10.0 ctofnb 12.0 -
+    ewald pmewald kappa 0.32 fftx @fftx ffty @ffty fftz @fftz order 6
+
+energy
+
+!! minimize
+cons harm force 100000000. mass select .not. type D* end
+mini sd   nstep 1000 !1000
+cons harm force 0.0 mass select all end
+update
+coor copy comp
+cons harm force 100000000. mass select .not. type D* end
+mini abnr nstep 2000 tolgrd 0.001 ! 2000 atleast for SILCS systems
+cons harm force 0.0 mass select all end
+
+open write unit 10 card name @{sys}.silcs.min.drude.pdb
+write coor unit 10 pdb  
+
+open write unit 10 card name @{sys}.silcs.min.drude.crd
+write coor unit 10 card
+close unit 10
+
+stop
