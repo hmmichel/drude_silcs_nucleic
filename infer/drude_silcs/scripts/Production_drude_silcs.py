@@ -44,8 +44,8 @@ ap.add_argument('-toppar', type=str, default='toppar.str', required=True,
                 help='Force field stream file (ex. "toppar.str").')
 ap.add_argument('-state', type=str, required=True,
                 help='XML file to read positions/velocities from (.rst).')
-ap.add_argument('-fc_silcs', default=500, type=float, required=True,
-                help='Force constant for SILCS positional restraints (kJ/mol/nm^2). Default: 500')
+ap.add_argument('-fc_silcs', default=50.208, type=float, required=True,
+                help='Force constant for SILCS positional restraints (kJ/mol/nm^2). Default: 50.208')
 ap.add_argument('-restraint_file', default="restraint.dat", type=str, required=True,
                 help='File containing heavy atoms to restraint in SILCS')
 

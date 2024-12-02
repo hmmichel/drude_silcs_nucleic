@@ -57,6 +57,7 @@ sysname=""
 toppardir=""
 workdir=`echo $PWD`
 setupdir="${workdir}/2a_run_gcmd"
+ions=""
 nproc=""
 qname=""
 account=""
@@ -109,13 +110,6 @@ do
   fi
 done
 
-# standard
-if [[ "$standard" == "true" ]]; then
-  halogen=false
-  probe=standard
-  drudedir=""${workdir}/2e_run_drude"
-fi
-
 PROT_PDB=$(basename $prot)
 PROT_PDB="${PROT_PDB%.*}"
 
@@ -166,17 +160,21 @@ run_drude ()
       builddir=${drudedir}/${i}/${j}/build
       equildir=${drudedir}/${i}/${j}/equil
 
-      cp ${builddir}/${sysname}.silcs.min.drude.pdb ${equildir}
+      cp ${builddir}/${sysname}.silcs.min.drude.crd ${equildir}
       cp ${builddir}/${sysname}.drude.silcs.xplor.psf ${equildir}
     
       cd ${equildir}
     
       # create boxsize file using system_properties.str in prep/
-      python ${SILCSBIODIR}/drude_silcs/silcs-rna/create_box_rst.py ${builddir}/system_properties.str ${sysname}
+      python ${SILCSBIODIR}/drude_silcs/scripts/create_box_rst.py ${builddir}/system_properties.str ${sysname}
       
       # create restraint file
-      python ${SILCSBIODIR}/drude_silcs/silcs-rna/make_restraint.py -pdb ${sysname}.silcs.min.drude.pdb -addsegments HETA
-    
+      if [[ ions != "" ]]; then
+        python ${SILCSBIODIR}/drude_silcs/scripts/make_restraint.py -crd ${sysname}.silcs.min.drude.crd -addsegments HETA
+      else
+        python ${SILCSBIODIR}/drude_silcs/scripts/make_restraint.py -crd ${sysname}.silcs.min.drude.crd
+      fi
+
     done
     
     cd ${drudedir}/${i}
@@ -229,9 +227,3 @@ if [[ "${standard}" == "true" ]]; then
   run_drude "2a_run_gcmd_charged" "${drudedir}_charged" "charged"
   echo -e ""
 fi 
-
-
-
-
-
-

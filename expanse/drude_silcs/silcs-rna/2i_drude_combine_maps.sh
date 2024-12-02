@@ -783,6 +783,14 @@ if [[ "$cns" == "true" ]]; then
   sed -e "s/<prot>/${pdb}/g" ${SILCSBIO_TEMPLATE_DIR}/silcs-rna/moe_fragmap.tmpl > ${fragmapdir}/view_maps.svl
 fi
 
+# Copy the structure from system 1 snapshot 10 for visualization
+molec=`grep "ATOM" ${drudedir}_neutral/1/10/prod/1_10_or.pdb | head -n 1 | tr -s ' '  | cut -d ' ' -f11`
+#echo ${molec}
+grep "${molec}" "${drudedir}_neutral/1/10/prod/1_10_or.pdb" | rev | cut -c 5- | rev > "${fragmapdir}/${pdb}.pdb"
+
+# Copy offset scripts into /maps directory to be used to offset Drude GFE
+cp ${SILCSBIODIR}/drude_silcs/scripts/offset_gfe.py ${fragmapdir}/maps/
+
 # Copy the version number of SILCSBIO to the fragmaps map folder
 cp ${SILCSBIODIR}/VERSION ${fragmapdir}/maps/.
 

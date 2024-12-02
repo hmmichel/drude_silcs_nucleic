@@ -57,7 +57,7 @@ OPTIONAL parameters:
 # default parameters
 prot=""
 sysname=""
-setupdir="${workdir}/1_setup_neutral"
+setupdir="${workdir}/1_setup"
 if [ -e ${setupdir}/ligand.txt ]; then lig=`cat ${setupdir}/ligand.txt`; else lig=""; fi
 if [ -e ${setupdir}/numsys.txt ]; then numsys=`cat ${setupdir}/numsys.txt`; else numsys=10; fi
 workdir=`echo $PWD`
@@ -89,10 +89,8 @@ if [[ "$halogen" == "true" ]]; then
 fi
 if [[ "$standard" == "true" ]]; then
   halogen=false
-  fragments_neutral="meoo imin iminh foro forn forc dmeo benc prpc swm4o gehc"
-  fragments_charged="mamn acec aceo swm4o"
-  gfefragments_neutral="meoo imin iminh foro forn forc dmeo benc prpc swm4o gehc apolar hbdon hbacc"
-  gfefragments_charged="mamn aceo acec swm4o"
+  fragments="meoo imin iminh foro forn forc mamn dmeo benc prpc swm4o gehc aceo acec"
+  gfefragments="meoo imin iminh foro forn forc mamn dmeo benc prpc swm4o gehc aceo acec apolar hbdon hbacc"
   setupdir="1_setup"
   drudeddir="${workdir}/2e_run_drude"
   mapdir="2h_drude_maps"
@@ -364,7 +362,6 @@ collate_maps () {
   local startrun=$3
   local endrun=$4
   local protmap=$5
-  local probe=$6
   #echo "Build maps combining data from : " $startrun"-"$endrun
 
   #nframes=101
@@ -495,41 +492,40 @@ collate_maps () {
     echo $bulk1 
   }
   #echo $probe >$(tty)
-  if [[ "$probe" == "neutral" ]]; then
-#	  echo "neutral" >$(tty)
-    if [[ "$standard" == "true" ]]; then
-      frags="foro dmeo imin"
-      gfemap="${mapdir}/${pdb}.hbacc.${startrun}-${endrun}.gfe.map"
-      if [[ "$norm" == "water" ]]; then
-        bulk1=$(avg_bulk)
-      fi
-      if [[ "$norm" == "volume" ]]; then
-        bulk1=$(avg_bulk)
-      fi
-      bundle_frag_gfe_maps "$frags" "$gfemap" 3
 
-      frags="forn iminh"
-      gfemap="${mapdir}/${pdb}.hbdon.${startrun}-${endrun}.gfe.map"
-      if [[ "$norm" == "water" ]]; then
-        bulk1=$(avg_bulk)
-      fi
-      if [[ "$norm" == "volume" ]]; then
-        bulk1=$(avg_bulk)
-      fi
-      bundle_frag_gfe_maps "$frags" "$gfemap" 2
-
-      frags="benc prpc gehc"
-      gfemap="${mapdir}/${pdb}.apolar.${startrun}-${endrun}.gfe.map"
-      if [[ "$norm" == "water" ]]; then
-        bulk1=$(avg_bulk)
-      fi
-      if [[ "$norm" == "volume" ]]; then
-        bulk1=$(avg_bulk)
-      fi
-    #echo $gfemap
-      bundle_frag_gfe_maps "$frags" "$gfemap" 12 
+  if [[ "$standard" == "true" ]]; then
+    frags="foro dmeo imin"
+    gfemap="${mapdir}/${pdb}.hbacc.${startrun}-${endrun}.gfe.map"
+    if [[ "$norm" == "water" ]]; then
+      bulk1=$(avg_bulk)
     fi
+    if [[ "$norm" == "volume" ]]; then
+      bulk1=$(avg_bulk)
+    fi
+    bundle_frag_gfe_maps "$frags" "$gfemap" 3
+
+    frags="forn iminh"
+    gfemap="${mapdir}/${pdb}.hbdon.${startrun}-${endrun}.gfe.map"
+    if [[ "$norm" == "water" ]]; then
+      bulk1=$(avg_bulk)
+    fi
+    if [[ "$norm" == "volume" ]]; then
+      bulk1=$(avg_bulk)
+    fi
+    bundle_frag_gfe_maps "$frags" "$gfemap" 2
+
+    frags="benc prpc gehc"
+    gfemap="${mapdir}/${pdb}.apolar.${startrun}-${endrun}.gfe.map"
+    if [[ "$norm" == "water" ]]; then
+      bulk1=$(avg_bulk)
+    fi
+    if [[ "$norm" == "volume" ]]; then
+      bulk1=$(avg_bulk)
+    fi
+    #echo $gfemap
+    bundle_frag_gfe_maps "$frags" "$gfemap" 12 
   fi
+
 
   #
   # excl & zero maps
@@ -645,32 +641,22 @@ if [[ "$numsys" -gt 1 && "$skipoc" == "false" ]]; then
   startrun=1
   midrun1=$((numsys/2 + numsys%2))
   echo "round 1 : collate maps from runs : ${startrun}-${midrun1}"
-  for probe in neutral charged; do
-      echo " --> $probe"
-      if [ $probe == "neutral" ]; then fragments="${fragments_neutral}"; elif [ $probe == "charged" ]; then fragments="${fragments_charged}"; fi
-      collate_maps ${drudedir}_${probe} ${mapdir}_${probe} $startrun $midrun1 false $begin $end $probe
-  done
+  collate_maps ${drudedir} ${mapdir} $startrun $midrun1 false $begin $end
+
 
   midrun2=$((numsys/2 + 1))
   endrun=$((numsys))
   echo "round 2 : collate maps from runs : ${midrun2}-${endrun}"
-  for probe in neutral charged; do
-      echo " --> $probe"
-      if [ $probe == "neutral" ]; then fragments="${fragments_neutral}"; elif [ $probe == "charged" ]; then fragments="${fragments_charged}"; fi
-      collate_maps ${drudedir}_${probe} ${mapdir}_${probe} $midrun2 $endrun false $begin $end $probe
-  done
+  collate_maps ${drudedir} ${mapdir} $midrun2 $endrun false $begin $end
+
 
   echo "Running QC to ensure simulations converged; will calculate overlap coefficients (OC) for each of the probe maps."
 
   set1="1-${midrun1}"
   set2="${midrun2}-${numsys}"
-  for probe in neutral charged; do
-      echo " --> $probe"
-      if [ $probe == "neutral" ]; then fragments="${fragments_neutral}"; elif [ $probe == "charged" ]; then fragments="${fragments_charged}"; fi
-      compute_overlap_coefficient ${mapdir}_${probe} $set1 $set2
-      mv oc_drude.dat oc_drude_${probe}.dat
-  done
-
+    compute_overlap_coefficient ${mapdir} $set1 $set2
+    mv oc_drude.dat oc_drude.dat
+  
   echo "Finished QC check; creating directory silcs_fragmaps_${pdb} for visualization"
   echo ""
 
@@ -689,11 +675,7 @@ startrun=1
 endrun=$numsys
 echo "final: collate maps from runs : ${startrun}-${endrun}"
 echo ""
-for probe in neutral charged; do
-    echo " --> $probe"
-    if [ $probe == "neutral" ]; then fragments="${fragments_neutral}"; elif [ $probe == "charged" ]; then fragments="${fragments_charged}"; fi
-    collate_maps ${drudedir}_${probe} ${mapdir}_${probe} $startrun $endrun false $begin $end $probe
-done
+  collate_maps ${drudedir} ${mapdir} $startrun $endrun false $begin $end
 
 #
 # collate maps
@@ -703,43 +685,31 @@ fragmapdir="${pdb}_drude_fragmaps"
 # Create a new visualization directory
 
 if [[ "$standard" == "true" ]]; then
-  for probe in neutral charged; do
-  if [ ! -d ${fragmapdir}_${probe}/maps ]; then mkdir -p ${fragmapdir}_${probe}/maps; fi
-  if [ $probe == "neutral" ]; then gfefragments="${gfefragments_neutral}"; elif [ $probe == "charged" ]; then gfefragments="${gfefragments_charged}"; fi
+  if [ ! -d ${fragmapdir}/maps ]; then mkdir -p ${fragmapdir}/maps; fi
   for frag in $(echo "${gfefragments}") ; do
-    if [[ -f ${mapdir}_${probe}/${pdb}.${frag}.${startrun}-${endrun}.gfe.map ]]; then
-      rm -f ${fragmapdir}_${probe}/maps/${pdb}.${frag}.gfe.map
-      cp ${mapdir}_${probe}/${pdb}.${frag}.${startrun}-${endrun}.gfe.map ${fragmapdir}_${probe}/maps/${pdb}.${frag}.gfe.map
+    if [[ -f ${mapdir}/${pdb}.${frag}.${startrun}-${endrun}.gfe.map ]]; then
+      rm -f ${fragmapdir}/maps/${pdb}.${frag}.gfe.map
+      cp ${mapdir}/${pdb}.${frag}.${startrun}-${endrun}.gfe.map ${fragmapdir}/maps/${pdb}.${frag}.gfe.map
     fi
   done
 
-  if [[ -f ${mapdir}_${probe}/${pdb}.excl.map ]]; then
-    rm -f ${fragmapdir}_${probe}/maps/${pdb}.excl.map
-    cp ${mapdir}_${probe}/${pdb}.excl.${startrun}-${endrun}.map ${fragmapdir}_${probe}/maps/${pdb}.excl.map
+  if [[ -f ${mapdir}/${pdb}.excl.map ]]; then
+    rm -f ${fragmapdir}/maps/${pdb}.excl.map
+    cp ${mapdir}/${pdb}.excl.${startrun}-${endrun}.map ${fragmapdir}/maps/${pdb}.excl.map
   fi
 
-  if [[ -f ${mapdir}_${probe}/${pdb}.zero.map ]]; then
-    rm -f ${fragmapdir}_${probe}/maps/${pdb}.zero.map
-    cp ${mapdir}_${probe}/${pdb}.excl.${startrun}-${endrun}.map ${fragmapdir}_${probe}/maps/${pdb}.zero.map
+  if [[ -f ${mapdir}/${pdb}.zero.map ]]; then
+    rm -f ${fragmapdir}/maps/${pdb}.zero.map
+    cp ${mapdir}/${pdb}.excl.${startrun}-${endrun}.map ${fragmapdir}/maps/${pdb}.zero.map
   fi
-  done
+  
   if [[ "$protmap" == true ]]; then
-    fragments="apolar hbdon hbacc meoo"
-    probe="neutral"
-    for frag in $(echo $fragments); do
-      if [[ -f ${mapdir}_${probe}/${pdb}.pro.${frag}.${startrun}-${endrun}.map ]]; then
-        rm -f ${fragmapdir}_${probe}/maps/${pdb}.pro.${frag}.map
-        cp ${mapdir}_${probe}/${pdb}.pro.${frag}.${startrun}-${endrun}.map ${fragmapdir}_${probe}/maps/${pdb}.pro.${frag}.map
+    fragments="apolar hbdon hbacc meoo aceo acec mamn"
+      if [[ -f ${mapdir}/${pdb}.pro.${frag}.${startrun}-${endrun}.map ]]; then
+        rm -f ${fragmapdir}/maps/${pdb}.pro.${frag}.map
+        cp ${mapdir}/${pdb}.pro.${frag}.${startrun}-${endrun}.map ${fragmapdir}/maps/${pdb}.pro.${frag}.map
       fi
-    done
-    fragments="mamn aceo acec"
-    probe="charged"
-    for frag in $(echo $fragments); do
-      if [[ -f ${mapdir}_${probe}/${pdb}.pro.${frag}.${startrun}-${endrun}.map ]]; then
-        rm -f ${fragmapdir}_${probe}/maps/${pdb}.pro.${frag}.map
-        cp ${mapdir}_${probe}/${pdb}.pro.${frag}.${startrun}-${endrun}.map ${fragmapdir}_${probe}/maps/${pdb}.pro.${frag}.map
-      fi
-    done
+    
   fi
 fi
 if [[ "$halogen" == "true" ]]; then
@@ -756,31 +726,21 @@ if [[ "$halogen" == "true" ]]; then
 fi
 
 if [[ -f ${pdb}.pdb ]]; then
-  for probe in neutral charged; do
-    rm -f ${fragmapdir}_${probe}/${pdb}.pdb
-    cp ${pdb}.pdb ${fragmapdir}_${probe}/${pdb}.pdb
-  done
+  rm -f ${fragmapdir}/${pdb}.pdb
+  cp ${pdb}.pdb ${fragmapdir}/${pdb}.pdb
 fi
 
 # Update plugins
-for probe in neutral charged; do
-  sed -e "s/<prot>/${pdb}/g" ${SILCSBIO_TEMPLATE_DIR}/silcs-rna/vmd_fragmap.tmpl > ${fragmapdir}_${probe}/view_maps.vmd
-  sed -e "s/<prot>/${pdb}/g" ${SILCSBIO_TEMPLATE_DIR}/silcs-rna/pymol_fragmap.tmpl > ${fragmapdir}_${probe}/view_maps.pml
-  rm -rf ${fragmapdir}_${probe}/plugins
-  cp -r ${SILCSBIODIR}/utils/plugins ${fragmapdir}_${probe}/
-done
-
-# Merge neutral and charged maps
-cp -rf ${fragmapdir}_neutral ${fragmapdir}
-cp ${fragmapdir}_charged/maps/${pdb}.mamn.gfe.map ${fragmapdir}/maps/${pdb}.mamn.gfe.map
-cp ${fragmapdir}_charged/maps/${pdb}.acec.gfe.map ${fragmapdir}/maps/${pdb}.acec.gfe.map
-cp ${fragmapdir}_charged/maps/${pdb}.aceo.gfe.map ${fragmapdir}/maps/${pdb}.aceo.gfe.map
+sed -e "s/<prot>/${pdb}/g" ${SILCSBIO_TEMPLATE_DIR}/silcs/vmd_fragmap.tmpl > ${fragmapdir}/view_maps.vmd
+sed -e "s/<prot>/${pdb}/g" ${SILCSBIO_TEMPLATE_DIR}/silcs/pymol_fragmap.tmpl > ${fragmapdir}/view_maps.pml
+rm -rf ${fragmapdir}/plugins
+cp -r ${SILCSBIODIR}/utils/plugins ${fragmapdir}/
 
 # CNS maps
 if [[ "$cns" == "true" ]]; then
   echo "converting maps to CNS format"
   ${SILCSBIODIR}/utils/map_to_cns.sh prot=${prot} mapsdir=${fragmapdir}/maps > /dev/null
-  sed -e "s/<prot>/${pdb}/g" ${SILCSBIO_TEMPLATE_DIR}/silcs-rna/moe_fragmap.tmpl > ${fragmapdir}/view_maps.svl
+  sed -e "s/<prot>/${pdb}/g" ${SILCSBIO_TEMPLATE_DIR}/silcs/moe_fragmap.tmpl > ${fragmapdir}/view_maps.svl
 fi
 
 # Copy the version number of SILCSBIO to the fragmaps map folder

@@ -14,25 +14,26 @@ stream system_properties.str
 
 set sys <sysname> 
 
-read sequ card
-* DNAA
-*
-@ndnaa
-@seq
-generate DNAA first 5TER last 3TER setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+open read card unit 10 name @moltype.crd
+read sequence coor unit 10 resid
+generate @moltype first 5TER last 3TER setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
 
+if @moltype .eq. "DNAA" then
 set i 1
-set nres @ndnaa 
+set nres @nres 
 label patch1
     patch deox dnaa @i setup warn
     incr i by 1
 if i .lt. @nres goto patch1
 patch deo3 dnaa @nres setup warn
+endif
 
 autogenerate angles dihedrals drude
 
-read sequence POT @nheta 
-generate HETA first none last none setup warn noangle nodihedral drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+if @nheta .gt. 0 then
+    read sequence @ions @nheta 
+    generate HETA first none last none setup warn noangle nodihedral drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+endif
 
 if @nacey .gt. 0 then
     read sequence ACEY @nacey 
@@ -83,8 +84,8 @@ write psf card xplor unit 10
 close unit 10
 
 bomlev -1   ! because there will be missing coordinates, which is OK at this point
-open read unit 10 card name @{sys}_converted_drude.pdb 
-read coor unit 10 pdb resid 
+open read unit 10 card name @{sys}_converted_drude.crd 
+read coor unit 10 card resid 
 
 ic param
 ic build
@@ -94,7 +95,7 @@ coor shake
 coor print
 bomlev 0
 
-coor stat sele segid DNAA end ! where "segid X" the segment(s) you want centered
+coor stat sele segid @moltype end ! where "segid X" the segment(s) you want centered
 coor trans xdir ?XAVE fact -1.0
 coor trans ydir ?YAVE fact -1.0
 coor trans zdir ?ZAVE fact -1.0
@@ -114,9 +115,9 @@ write coor unit 10 pdb
 crystal define @shape @boxx @boxy @boxz @alp @bet @gam 
 crystal build cutoff 10. noper 0
 
-coor stat sele segid DNAA end
-image byseg xcen ?XAVE ycen ?YAVE zcen ?ZAVE sele segid DNAA end
-image byres xcen ?XAVE ycen ?YAVE zcen ?ZAVE sele .not. segid DNAA end
+coor stat sele segid @moltype end
+image byseg xcen ?XAVE ycen ?YAVE zcen ?ZAVE sele segid @moltype end
+image byres xcen ?XAVE ycen ?YAVE zcen ?ZAVE sele .not. segid @moltype end
 
 ! calculate Fourier grid
 system "python2 checkfft.py ?XTLA ?XTLB ?XTLC > checkfft.str"

@@ -142,14 +142,14 @@ run_drude ()
     for j in {10..100..10}; do
       if [ ! -z ${lig} ]; then
         nligatoms=`grep -e ATOM ${setupdir}/${LIGAND}_gmx.pdb | wc -l`
-        if [[ ! -f ${drudedir}/${i}/${j}/build/${sysname}.silcs.min.drude.pdb ]]; then
-          echo "NO DRUDE MIN PDB FOUND FOR THIS RUN"
+        if [[ ! -f ${drudedir}/${i}/${j}/build/${sysname}.silcs.min.drude.crd ]]; then
+          echo "NO DRUDE MIN CRD FOUND FOR THIS RUN"
           exit 1
         fi
       else
         nligatoms=0
-        if [[ ! -f ${drudedir}/${i}/${j}/build/${sysname}.silcs.min.drude.pdb ]]; then
-        echo "NO DRUDE MIN PDB FOUND FOR THIS RUN"
+        if [[ ! -f ${drudedir}/${i}/${j}/build/${sysname}.silcs.min.drude.crd ]]; then
+        echo "NO DRUDE MIN CRD FOUND FOR THIS RUN"
         exit 1
         fi
       fi
@@ -159,7 +159,7 @@ run_drude ()
       builddir=${drudedir}/${i}/${j}/build
       equildir=${drudedir}/${i}/${j}/equil
 
-      cp ${builddir}/${sysname}.silcs.min.drude.pdb ${equildir}
+      cp ${builddir}/${sysname}.silcs.min.drude.crd ${equildir}
       cp ${builddir}/${sysname}.drude.silcs.xplor.psf ${equildir}
     
       cd ${equildir}
@@ -168,7 +168,7 @@ run_drude ()
       python ${SILCSBIODIR}/drude_silcs/scripts/create_box_rst.py ${builddir}/system_properties.str ${sysname}
       
       # create restraint file
-      python ${SILCSBIODIR}/drude_silcs/scripts/make_restraint.py -pdb ${sysname}.silcs.min.drude.pdb -addsegments HETA
+      python ${SILCSBIODIR}/drude_silcs/scripts/make_restraint.py -crd ${sysname}.silcs.min.drude.crd -addsegments HETA
     
     done
     

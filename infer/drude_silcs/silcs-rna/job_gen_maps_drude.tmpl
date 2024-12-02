@@ -88,7 +88,7 @@ collate_subset_maps () {
 # enter each snapshot directory and create temporary .dcd files
 for j in {10..100..10}; do
   trajdir="${drudedir}/${i}/${j}/prod"
-  
+  molec=`grep "ATOM" ${drudedir}/1/10/prod/${sysname}.1.drude.silcs.10_1.pdb | head -n 1 | tr -s ' '  | cut -d ' ' -f12`
   cd ${trajdir}
 
   /projects/lemkul_lab/software/infer/bin/catdcd -o temp.dcd ${sysname}.${i}.drude.silcs.${j}_{1..2}.dcd
@@ -101,10 +101,25 @@ for j in {10..100..10}; do
   # edit to appropriate list of modules
   source activate /projects/lemkul_lab/software/infer/silcsbio/2023.1/conda_envs/silcs 
 
-  #merge-traj --centering-selection='all' --fix-imaging 'on' ${sysname}.drude.silcs.xplor.psf full_or.dcd temp.dcd
-  merge-traj --centering-selection='segid =~ "DNAA"' --fix-imaging='on' ${sysname}.drude.silcs.xplor.psf full_or.dcd temp.dcd
-  frame2pdb ${sysname}.drude.silcs.xplor.psf full_or.dcd 1 >${i}_${j}_or.pdb
+  #echo ${molec}
 
+  if [[ -f full_or.dcd ]]; then
+    rm full_or.dcd
+  fi
+  
+  if [[ -f ${i}_${j}_or.pdb ]]; then
+    rm ${i}_${j}_or.pdb
+  fi
+
+  if [[ ${molec} == "DNAA" ]]; then
+    #merge-traj --centering-selection='all' --fix-imaging 'on' ${sysname}.drude.silcs.xplor.psf full_or.dcd temp.dcd
+    merge-traj --centering-selection='segid =~ "DNAA"' --fix-imaging='on' ${sysname}.drude.silcs.xplor.psf full_or.dcd temp.dcd
+
+  elif [[ ${molec} == "RNAA" ]]; then
+    merge-traj --centering-selection='segid =~ "RNAA"' --fix-imaging='off' ${sysname}.drude.silcs.xplor.psf full_or.dcd temp.dcd
+  fi
+
+  frame2pdb ${sysname}.drude.silcs.xplor.psf full_or.dcd 1 >${i}_${j}_or.pdb
   rm temp.dcd
 done
 

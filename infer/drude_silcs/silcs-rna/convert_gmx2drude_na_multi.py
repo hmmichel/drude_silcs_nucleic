@@ -4,6 +4,9 @@ import sys
 import re
 import os
 
+# set number of strands as a variable based on user input
+strands =  sys.argv[1:]
+
 # Function to format the output in PDB format
 def outfmt(atom, anum, name, resn, resnr, x, y, z, occ, bfac, segid, atomtype):
     # Use PDB format
@@ -11,13 +14,16 @@ def outfmt(atom, anum, name, resn, resnr, x, y, z, occ, bfac, segid, atomtype):
     # Use CHARMM CRD format
     return f"{atoms:10}{resnr:10}  {resn:<10}{name:<10}{x:18.10f}{y:20.10f}{z:20.10f}  {segid:<10}{resnr:<10}{0:18.10f}\n"
 
-if len(sys.argv) == 5:
+if len(sys.argv) == 4:
     input_file = sys.argv[1]
     output_file = sys.argv[2]
-    ions = sys.argv[3]
-    strands = sys.argv[4]
+    ions = sys.argv[3] 
+elif len(sys.argv) == 3: 
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
+    ions = ""
 else:
-    print("Usage: python convert_gmx2drude_na.py input.pdb output.pdb ion_resid num_strands")
+    print("Usage: python convert_gmx2drude_na.py input.pdb output.pdb ion_resid")
     sys.exit(1)
 
 with open(input_file, "r") as infile:

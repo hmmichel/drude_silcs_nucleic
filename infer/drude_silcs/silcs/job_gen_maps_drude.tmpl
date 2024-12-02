@@ -9,21 +9,13 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=<email>
 
-module reset
-module load cpu/0.17.3b
-#module load gcc/10.2.0/npcyll4
-#module load openmpi/4.1.3/oq3qvsv
-
-#module purge
-#module load slurm
-#module load shared
-module load gpu/0.15.4
-module load cuda10.2/toolkit/10.2.89
-module load anaconda3/2020.11
-
 qname=<qname>
 account=<account>
 email=<email>
+
+module reset
+module load Anaconda3/2020.11
+module load gcc/9.2.0
 
 export GMX_MAXBACKUP=-1
 
@@ -96,10 +88,10 @@ collate_subset_maps () {
 # enter each snapshot directory and create temporary .dcd files
 for j in {10..100..10}; do
   trajdir="${drudedir}/${i}/${j}/prod"
-  molec=`grep "ATOM" ${drudedir}/1/10/prod/${sysname}.1.drude.silcs.10_1.pdb | head -n 1 | tr -s ' '  | cut -d ' ' -f12`
+  molec=`grep "ATOM" ${drudedir}/1/10/prod/2lwk.1.drude.silcs.10_1.pdb | head -n 1 | tr -s ' '  | cut -d ' ' -f12`
   cd ${trajdir}
 
-  /expanse/lustre/projects/vpt121/jalemkul/software/bin/catdcd -o temp.dcd ${sysname}.${i}.drude.silcs.${j}_{1..2}.dcd
+  /projects/lemkul_lab/software/infer/bin/catdcd -o temp.dcd ${sysname}.${i}.drude.silcs.${j}_{1..2}.dcd
 
   # get box vectors - its ugly but it works
   #boxx="`grep "A" a4t14.${i}.drude.silcs.${j}_2.rst | awk {'print $2'} | grep -oP 'x=\K".*"' | sed 's/"//g' | awk '{print $1*10}'`"
@@ -107,9 +99,9 @@ for j in {10..100..10}; do
   #boxz="`grep "C" a4t14.${i}.drude.silcs.${j}_2.rst | awk {'print $4'} | grep -oP 'z=\K".*"' | sed 's/"//g' | awk '{print $1*10}'
 
   # edit to appropriate list of modules
-  source activate /expanse/lustre/projects/vpt121/hmichel/silcsbio/2023.1/conda_envs/loos_silcs 
+  source activate /projects/lemkul_lab/software/infer/silcsbio/2023.1/conda_envs/silcs 
 
-  #echo ${molec}
+  echo ${molec}
 
   if [[ -f full_or.dcd ]]; then
     rm full_or.dcd
@@ -119,14 +111,11 @@ for j in {10..100..10}; do
     rm ${i}_${j}_or.pdb
   fi
 
-  if [[ ${molec} == "DNAA" ]]; then
+  if [[ ${molec} == "PROA" ]]; then
     #merge-traj --centering-selection='all' --fix-imaging 'on' ${sysname}.drude.silcs.xplor.psf full_or.dcd temp.dcd
-    merge-traj --centering-selection='segid =~ "DNAA"' --fix-imaging='on' ${sysname}.drude.silcs.xplor.psf full_or.dcd temp.dcd
-
-  elif [[ ${molec} == "RNAA" ]]; then
-    merge-traj --centering-selection='segid =~ "RNAA"' --fix-imaging='off' ${sysname}.drude.silcs.xplor.psf full_or.dcd temp.dcd
+    merge-traj --centering-selection='segid =~ "PROA"' --fix-imaging='on' ${sysname}.drude.silcs.xplor.psf full_or.dcd temp.dcd
   fi
-
+  
   frame2pdb ${sysname}.drude.silcs.xplor.psf full_or.dcd 1 >${i}_${j}_or.pdb
   rm temp.dcd
 done
@@ -168,7 +157,7 @@ do
   for frag in $(echo $fragments); do
 #        echo $frag #$prodpdb $prodtraj
 #        echo `pwd`
-        /expanse/lustre/projects/vpt121/jalemkul/software/bin/make_map_direct.o $prodpdb $prodtraj ${SILCSBIODIR}/data/drude_selection/${frag}.txt ../map.${sysname}.prm ${sysname}.${frag}.${i}_${j}.map
+         /projects/lemkul_lab/software/infer/bin/make_map_direct.o $prodpdb $prodtraj ${SILCSBIODIR}/data/drude_selection/${frag}.txt ../map.${sysname}.prm ${sysname}.${frag}.${i}_${j}.map
 	 wait
 	 if [[ ! -d ${i} ]]; then
                 mkdir ${i}

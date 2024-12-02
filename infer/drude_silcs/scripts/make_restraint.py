@@ -3,7 +3,7 @@
 # Creates a restraint file to be used in positional restraints
 # Atom naming is CHARMM compatible!!! Bear in mind your atom naming!
 #
-# USAGE: python make_restraint.py -crd filename.crd -pdb filename.pdb -addsegments HETA
+# USAGE: python make_restraint.py -crd filename.crd (-pdb filename.pdb) (-addsegments HETA)
 #
 # By default, all Drude particles and lone pairs are ignored.
 #
@@ -179,7 +179,8 @@ def use_crd(file,segments):
 								if resname not in exclude_list:
 									if segid not in segments:
 										#print(atom_nr, atom_name,resnumber, segid)
-										print(">>>>>> Residue " + str(resname+"-"+resnumber) + " not found in the RESIDUES/IONS list! Check your input...")
+										#print(">>>>>> Residue " + str(resname+"-"+resnumber) + " not found in the RESIDUES/IONS list! Check your input...")
+										pass
 					else:
 
 						# Check for additional segments

@@ -166,6 +166,18 @@ gen_maps () {
   j=`echo $probe | awk '{print toupper($0)}'`
   jobname=DM${p:0:1}-${sysname:$i}
   
+  gcx=`grep "NELEMENTS" ${workdir}/silcs_fragmaps_${PROT_PDB}/maps/${PROT_PDB}.benc.gfe.map | awk '{print substr($2,1,2)}' | awk '{print $1/2}'`
+  gcy=`grep "NELEMENTS" ${workdir}/silcs_fragmaps_${PROT_PDB}/maps/${PROT_PDB}.benc.gfe.map | awk '{print substr($3,1,2)}' | awk '{print $1/2}'`
+  gcz=`grep "NELEMENTS" ${workdir}/silcs_fragmaps_${PROT_PDB}/maps/${PROT_PDB}.benc.gfe.map | awk '{print substr($4,1,2)}' | awk '{print $1/2}'`
+  
+  #  while true;
+  #  do
+      sed -e "s/<gcx>/${gcx}/g" \
+          -e "s/<gcy>/${gcy}/g" \
+          -e "s/<gcz>/${gcz}/g" \
+          ${SILCSBIODIR}/drude_silcs/templates/map_prm.tmpl > ${workdir}/map.${sysname}.prm
+  #  done
+  
   if [[ ! -d ${mapdir} ]]; then mkdir ${mapdir}; fi
 
   i=1
@@ -193,7 +205,7 @@ gen_maps () {
         -e "s/<account>/${account}/g" \
         -e "s/<email>/${email}/g" \
         -e "s/<qname>/${qname}/g" \
-	${SILCSBIODIR}/drude_silcs/job_gen_maps_drude.tmpl > ${mapdir}/sub_maps_drude.${i}.sh
+	${SILCSBIODIR}/drude_silcs/silcs-rna/job_gen_maps_drude.tmpl > ${mapdir}/sub_maps_drude.${i}.sh
 
   cd ${mapdir}
 

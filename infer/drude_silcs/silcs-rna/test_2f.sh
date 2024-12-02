@@ -52,7 +52,6 @@ Additional parameters:
   batch=<only generate inputs and not submit jobs true/false; default=$batch>
 @EOF
 }
-
 prot=""
 sysname=""
 toppardir=""
@@ -69,19 +68,17 @@ batch=false
 halogen=false
 memb=false
 standard=true
-restart=false
-cancel=false
 gpu=false
 cleanup=true
 protmap=true
-margin=10
 spacing=1.0
 drudedir="${workdir}/2e_run_drude"
 
 temp=298
 
-echo ${workdir}
-echo ${drudedir}
+#echo ${workdir}
+#echo ${drudedir}
+
 if [[ $# -lt 1 ]]; then
   show_usage
   if ["`ls ${setupdir}_neutral/* -d| wc -l`" -gt 0 ]; then
@@ -94,6 +91,7 @@ fi
 
 parse_args $@
 
+#echo $@
 # required arguments
 for arg in prot
 do
@@ -104,14 +102,6 @@ do
 done
 
 for arg in sysname
-do
-  if [[ "${!arg}" == "" ]]; then
-    echo "argument \"${arg}\" is required."
-    exit 1
-  fi
-done
-
-for arg in toppardir
 do
   if [[ "${!arg}" == "" ]]; then
     echo "argument \"${arg}\" is required."
@@ -134,8 +124,8 @@ echo -e "\n"
 
 totruns=$numsys
 
-run_drude () 
-{ 
+run_drude ()
+{
   local setupdir=$1
   local drudedir=$2
   local probe=$3
@@ -145,70 +135,69 @@ run_drude ()
   jobname=DS${p:0:1}-${PROT_PDB:0:4}
 
   if [[ ! -d ${drudedir} ]]; then mkdir ${drudedir}; fi
-
+ 
 # first loop for drude preparation
   i=1
   while [[ "$i" -le "$totruns" ]];do
     for j in {10..100..10}; do
       if [ ! -z ${lig} ]; then
         nligatoms=`grep -e ATOM ${setupdir}/${LIGAND}_gmx.pdb | wc -l`
-        if [[ ! -f ${setupdir}/${i}/${PROT_PDB}_${LIGAND}_silcs.${i}.prod.${j}.rec.pdb ]]; then
-          echo "NO SILCS PDB file found for this run"
+        if [[ ! -f ${drudedir}/${i}/${j}/build/${sysname}.silcs.min.drude.pdb ]]; then
+          echo "NO DRUDE MIN PDB FOUND FOR THIS RUN"
           exit 1
         fi
-#      else
-#        nligatoms=0
-#        if [[ ! -f ${setupdir}/${i}/${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ]]; then
-#          echo ${setupdir}
-#          echo "${setupdir}/${i}/${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb not found"
-#          exit 1
-#        fi
+      else
+        nligatoms=0
+        if [[ ! -f ${drudedir}/${i}/${j}/build/${sysname}.silcs.min.drude.pdb ]]; then
+        echo "NO DRUDE MIN PDB FOUND FOR THIS RUN"
+        exit 1
+        fi
       fi
-
 # check for drude directory for appropriate setup and interval
-      if [[ ! -d ${drudedir}/${i}/${j}/build ]]; then mkdir -p ${drudedir}/${i}/${j}/build; fi
-      
+      if [[ ! -d ${drudedir}/${i}/${j}/equil ]]; then mkdir -p ${drudedir}/${i}/${j}/equil; fi
+
       builddir=${drudedir}/${i}/${j}/build
-      
-      # copy specific setup and interval file in correct directory
-      cp ${setupdir}/${i}/${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ${builddir}       
-      
-      sed -e "s/<sysname>/${sysname}/g" \
-          -e "s~<topstr>~${drudedir}/~g" \
-          ${SILCSBIODIR}/drude_silcs/silcs/write_drude_psf_silcs.tmpl > ${builddir}/write_drude_psf_silcs.inp
-      
-      cp ${SILCSBIODIR}/drude_silcs/scripts/checkfft.py ${builddir}
+      equildir=${drudedir}/${i}/${j}/equil
 
-      cd ${builddir}
-      # convert gmx pdb format to acceptable charmm format and create stream file needed to write drude psf
-      python3 ${SILCSBIODIR}/drude_silcs/silcs/convert_gmx2drude_protein.py ${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ${sysname}_converted_drude.crd
+      cp ${builddir}/${sysname}.silcs.min.drude.pdb ${equildir}
+      cp ${builddir}/${sysname}.drude.silcs.xplor.psf ${equildir}
     
-    done 
-
+      cd ${equildir}
+    
+      # create boxsize file using system_properties.str in prep/
+      python ${SILCSBIODIR}/drude_silcs/scripts/create_box_rst.py ${builddir}/system_properties.str ${sysname}
+      
+      # create restraint file
+      python ${SILCSBIODIR}/drude_silcs/scripts/make_restraint.py -pdb ${sysname}.silcs.min.drude.pdb -addsegments HETA
+    
+    done
+    
     cd ${drudedir}/${i}
-
+    
     sed -e "s~<toppardir>~${toppardir}~g" \
-          ${SILCSBIODIR}/drude_silcs/silcs/toppar_drude_silcs_charmm.tmpl > ${drudedir}/toppar_drude_silcs_charmm.str
-
-    sed -e "s/<PROT PDB>/${PROT_PDB}/g" \
-        -e "s/<sysname>/${sysname}/g" \
+        ${SILCSBIODIR}/drude_silcs/silcs-rna/toppar_drude_silcs_openmm.tmpl > ${drudedir}/toppar_drude_silcs_openmm.str
+          
+    # create equilibration submission file
+    sed -e "s/<sysname>/${sysname}/g" \
         -e "s~<drudedir>~${drudedir}~g" \
         -e "s/<run>/${i}/g" \
         -e "s/<int>/${j}/g" \
         -e "s/<jobname>/${jobname}/g" \
         -e "s/<nproc>/${nproc}/g" \
-	      -e "s~<SILCSBIODIR>~${SILCSBIODIR}~g" \
+        -e "s~<SILCSBIODIR>~${SILCSBIODIR}~g" \
+        -e "s/<batch>/${batch}/g" \
         -e "s/<gpu>/${gpu}/g" \
 	      -e "s/<account>/${account}/g" \
-	      -e "s/<email>/${email}/g" \
+  	    -e "s/<email>/${email}/g" \
 	      -e "s/<qname>/${qname}/g" \
-        ${SILCSBIODIR}/drude_silcs/templates/job_drude_silcs_build.tmpl > ${drudedir}/${i}/sub_drude_silcs_build.sh
-  
+        ${SILCSBIODIR}/drude_silcs/templates/job_drude_silcs_equil.tmpl > ${drudedir}/${i}/sub_drude_silcs_equil.sh
+
+    
     nbadlinks=`find . -xtype l | wc -l`
 
     if [[ "$nbadlinks" -eq 0 ]]; then
       if [[ "$batch" == false ]]; then
-        output=`sbatch sub_drude_silcs_build.sh`
+        output=`sbatch sub_drude_silcs_equil.sh`
         echo $output
         taskid=`echo $output | awk '{print $3}' | tr -d '<>'`
         echo "$taskid" > .progress
@@ -220,15 +209,22 @@ run_drude ()
       fi
     else
       echo "${drudedir}/${i} has bad symlinks; not submitting the job;"
-      echo "cd into ${gcmddir}/${i} to find out what is wrong and rerun this script"
     fi
-  
+
     i=$((i+1))
   done
 }
- 
+   
 if [[ "${standard}" == "true" ]]; then
-  echo -e "Running Drude SILCS - Build \n-----------------------\n"
-  run_drude "${setupdir}" "${drudedir}" "standard"
+  echo -e "Set 1 - Neutral Probes\n-----------------------\n"
+  run_drude "2a_run_gcmd_neutral" "${drudedir}_neutral" "neutral"
+  echo -e "\nSet 2 - Charged Probes\n-----------------------\n"
+  run_drude "2a_run_gcmd_charged" "${drudedir}_charged" "charged"
   echo -e ""
-fi  
+fi 
+
+
+
+
+
+

@@ -58,6 +58,8 @@ sysname=""
 toppardir=""
 workdir=`echo $PWD`
 setupdir="${workdir}/2a_run_gcmd"
+ions="no"
+strands="0"
 nproc=""
 qname=""
 account=""
@@ -69,6 +71,7 @@ batch=false
 halogen=false
 memb=false
 standard=true
+multistrand=false
 restart=false
 cancel=false
 gpu=false
@@ -119,6 +122,11 @@ do
   fi
 done
 
+if [[ "$standard" == "true" ]]; then
+  halogen=false
+  probe=standard
+fi
+
 PROT_PDB=$(basename $prot)
 PROT_PDB="${PROT_PDB%.*}"
 
@@ -156,13 +164,13 @@ run_drude ()
           echo "NO SILCS PDB file found for this run"
           exit 1
         fi
-#      else
-#        nligatoms=0
-#        if [[ ! -f ${setupdir}/${i}/${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ]]; then
-#          echo ${setupdir}
-#          echo "${setupdir}/${i}/${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb not found"
-#          exit 1
-#        fi
+      else
+        nligatoms=0
+        if [[ ! -f ${setupdir}/${i}/${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ]]; then
+          echo ${setupdir}
+          echo "${setupdir}/${i}/${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb not found"
+          exit 1
+        fi
       fi
 
 # check for drude directory for appropriate setup and interval
@@ -171,17 +179,24 @@ run_drude ()
       builddir=${drudedir}/${i}/${j}/build
       
       # copy specific setup and interval file in correct directory
-      cp ${setupdir}/${i}/${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ${builddir}       
+      cp ${setupdir}/${i}/${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ${builddir}  
+
+      if [[ "${strands}" != "0" ]]; then   
       
-      sed -e "s/<sysname>/${sysname}/g" \
-          -e "s~<topstr>~${drudedir}/~g" \
-          ${SILCSBIODIR}/drude_silcs/silcs-rna/write_drude_psf_silcs.tmpl > ${builddir}/write_drude_psf_silcs.inp
-      
+        sed -e "s/<sysname>/${sysname}/g" \
+            -e "s~<topstr>~${drudedir}/~g" \
+            ${SILCSBIODIR}/drude_silcs/silcs-rna/write_drude_psf_silcs_multistrand.tmpl > ${builddir}/write_drude_psf_silcs.inp
+      else
+        sed -e "s/<sysname>/${sysname}/g" \
+            -e "s~<topstr>~${drudedir}/~g" \
+            ${SILCSBIODIR}/drude_silcs/silcs-rna/write_drude_psf_silcs.tmpl > ${builddir}/write_drude_psf_silcs.inp
+      fi
+
       cp ${SILCSBIODIR}/drude_silcs/scripts/checkfft.py ${builddir}
 
       cd ${builddir}
       # convert gmx pdb format to acceptable charmm format and create stream file needed to write drude psf
-      python ${SILCSBIODIR}/drude_silcs/silcs-rna/convert_gmx2drude_na.py ${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ${sysname}_converted_drude.pdb
+      python3 ${SILCSBIODIR}/drude_silcs/silcs-rna/convert_gmx2drude_na.py ${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ${sysname}_converted_drude.crd ${ions} ${strands}
     
     done 
 

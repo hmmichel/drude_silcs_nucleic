@@ -36,8 +36,8 @@ warnings.filterwarnings("ignore", message="DCDReader currently makes independent
 ap = argparse.ArgumentParser(description=__doc__)
 
 # Mandatory
-ap.add_argument('-pdb', type=str, default=None, required=True,
-                help='Input coordinate file (.pdb)')
+ap.add_argument('-crd', type=str, default=None, required=True,
+                help='Input coordinate file (.crd)')
 ap.add_argument('-psf', type=str, default=None, required=True,
                 help='Topology file in XPLOR format (.psf)')
 ap.add_argument('-toppar', type=str, default='toppar.str', required=True,
@@ -213,7 +213,7 @@ def restraints(system, crd, fc_silcs, restraint_file):
 #############################################
 print("\n> Simulation details:\n")
 print("\tJob name = " + jobname)
-print("\tPDB file = " + str(cmd.pdb))
+print("\tCRD file = " + str(cmd.crd))
 print("\tPSF file = " + str(cmd.psf))
 print("\tToppar stream file = " + str(read_toppar(cmd.toppar)[1]))
 
@@ -236,7 +236,7 @@ charmm_params = read_toppar(cmd.toppar)[0]
 
 print("\t- Reading topology and structure file...")
 psf = CharmmPsfFile(cmd.psf)
-crd = PDBFile(cmd.pdb)
+crd = CharmmCrdFile(cmd.crd)
 
 print("\t- Setting box (using information on -state file)...")
 psf = get_cubic_box(psf, cmd.state)
@@ -296,7 +296,7 @@ for n in range(cmd.firststride, nstride + 1):
 	log_file = jobname + "_" + str(n) + ".log"
 	rst_file = jobname + "_" + str(n) + ".rst"
 	prv_rst_file = jobname + "_" + str(n-1) + ".rst"
-	pdb_file = jobname + "_" + str(n) + ".pdb"
+	crd_file = jobname + "_" + str(n) + ".crd"
 
 	if os.path.exists(rst_file):
 		print("> Stride #" + str(n) + " finished (" + rst_file + " present). Moving to next stride... <")
@@ -386,11 +386,11 @@ for n in range(cmd.firststride, nstride + 1):
 		f.write(XmlSerializer.serialize(state))
 
 	last_frame = int(nsteps/nsavcrd)
-	print("> Writing last coordinate (" + str(pdb_file) + ", frame = " + str(last_frame) + ")...")
+	print("> Writing last coordinate (" + str(crd_file) + ", frame = " + str(last_frame) + ")...")
 	u = mda.Universe(cmd.psf, dcd_file)
 	system = u.select_atoms('all')
 	for ts in u.trajectory[(len(u.trajectory)-1):len(u.trajectory)]:
-		with mda.Writer(str(pdb_file), system.n_atoms) as W:
+		with mda.Writer(str(crd_file), system.n_atoms, extended = True) as W:
 			W.write(system)
 
 try:

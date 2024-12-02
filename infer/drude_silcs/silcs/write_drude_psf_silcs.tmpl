@@ -18,20 +18,12 @@ set sys <sysname>
 ! can also read sequence from a PDB file
 ! NOTE the Drude-specific syntax
 
-read sequ card
-* PROT
-*
-@nprot
-@seq
-generate PROT first ACE last CT3 setup warn drude dmass 0.4
+
+open read card unit 10 name proa.crd
+read sequence coor unit 10 resid
+generate PROA first ACE last CT3 setup warn drude dmass 0.4
 
 autogenerate angles dihedrals drude
-
-
-if @nacey .gt. 0 then
-    read sequence ACEY @nacey 
-    generate ACEY first none last none setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
-endif
 
 if @nbenx .gt. 0 then
     read sequence BENX @nbenx
@@ -51,6 +43,11 @@ endif
 if @nimid .gt. 0 then
     read sequence IMID @nimid 
     generate IMID first none last none setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
+endif
+
+if @nacey .gt. 0 then
+    read sequence ACEY @nacey 
+    generate ACEY first none last none setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
 endif
 
 if @nmamy .gt. 0 then
@@ -77,8 +74,8 @@ write psf card xplor unit 10
 close unit 10
 
 bomlev -1   ! because there will be missing coordinates, which is OK at this point
-open read unit 10 card name @{sys}_converted_drude.pdb 
-read coor unit 10 pdb resid 
+open read unit 10 card name @{sys}_converted_drude.crd 
+read coor unit 10 card resid 
 
 ic param
 ic build
@@ -88,7 +85,7 @@ coor shake
 coor print
 bomlev 0
 
-coor stat sele segid PROT end ! where "segid X" the segment(s) you want centered
+coor stat sele segid PROA end ! where "segid X" the segment(s) you want centered
 coor trans xdir ?XAVE fact -1.0
 coor trans ydir ?YAVE fact -1.0
 coor trans zdir ?ZAVE fact -1.0
@@ -108,9 +105,9 @@ write coor unit 10 pdb
 crystal define @shape @boxx @boxy @boxz @alp @bet @gam 
 crystal build cutoff 10. noper 0
 
-coor stat sele segid PROT end
-image byseg xcen ?XAVE ycen ?YAVE zcen ?ZAVE sele segid PROT end
-image byres xcen ?XAVE ycen ?YAVE zcen ?ZAVE sele .not. segid PROT end
+coor stat sele segid PROA end
+image byseg xcen ?XAVE ycen ?YAVE zcen ?ZAVE sele segid PROA end
+image byres xcen ?XAVE ycen ?YAVE zcen ?ZAVE sele .not. segid PROA end
 
 ! calculate Fourier grid
 system "python2 checkfft.py ?XTLA ?XTLB ?XTLC > checkfft.str"

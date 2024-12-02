@@ -37,9 +37,9 @@ cd $SLURM_SUBMIT_DIR
 
 for j in {10..100..10}; do
     if cd ${drudedir}/${run}/${j}/equil ; then
-        python ${SILCSBIODIR}/drude_silcs/EquNPT_drude.py \
+        python ${SILCSBIODIR}/drude_silcs/scripts/EquNPT_drude_crd.py \
             -psf ${sysname}.drude.silcs.xplor.psf \
-            -pdb ${sysname}.silcs.min.drude.pdb \
+            -crd ${sysname}.silcs.min.drude.crd \
             -toppar ${drudedir}/toppar_drude_silcs_openmm.str \
             -restraint_file restraint_atoms.dat \
             -state_c36 ${sysname}_boxsize.rst \

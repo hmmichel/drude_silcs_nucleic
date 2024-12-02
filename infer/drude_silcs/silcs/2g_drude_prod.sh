@@ -70,7 +70,7 @@ batch=false
 halogen=false
 memb=false
 standard=true
-gpu=false
+restart=false
 cleanup=true
 protmap=true
 spacing=1.0
@@ -116,6 +116,52 @@ do
   fi
 done
 
+# restart all
+if [[ "${restart}" == "true" ]]; then
+  printf ">> You are restarting all runs! Please make sure all of\n"
+  printf "   your ${numsys} jobs have stopped before you continue,\n"
+  printf "   or else please restart them individually.\n"
+  printf ">> Continue (y/n) : "; read rep
+  if [[ "$rep" == "y" ]]; then
+    for ${i} in {1..10..1}; do
+      jobdir="${drudedir}"
+      jobfile="sub_drude_silcs_prod_${i}.sh"
+      if [[ -f "${jobdir}/${jobfile}" ]]; then
+        cd $jobdir
+        output=$(sbatch $jobfile)
+        taskid=$(echo $output | awk '{print $3}' | tr -d '<>')
+        progress=$(tail -1 .progress)
+        echo "$taskid" > .progress
+        echo "$progress" >> .progress
+        echo "$output"
+        cd ../../
+      else
+        echo "job file < ${jobdir}/${jobfile} > is not found."
+        exit 1
+      fi
+    done
+    exit 0
+  else exit 1; fi
+elif  [[ "${restart:0:1}" == "#" ]]; then
+  sys="${restart:1:2}"
+  jobdir="${drudedir}"
+  jobfile="sub_drude_silcs_prod_${i}.sh"
+  if [[ -d ${jobdir} && -f "${jobdir}/${jobfile}" ]]; then
+    cd $jobdir
+    output=$(sbatch $jobfile)
+    taskid=$(echo $output | awk '{print $3}' | tr -d '<>')
+    progress=$(tail -1 .progress)
+    echo "$taskid" > .progress
+    echo "$progress" >> .progress
+    echo "$output"
+    cd ../../
+    exit 0
+  else
+    echo "Please choose valid number (#n) in [1, N]. For example: restart=#5. "
+    exit 1
+  fi
+fi
+
 #echo "\"${customres}\""
 
 PROT_PDB=$(basename $prot)
@@ -151,14 +197,14 @@ run_drude ()
     for j in {10..100..10}; do
      if [ ! -z ${lig} ]; then
         nligatoms=`grep -e ATOM ${setupdir}/${LIGAND}_gmx.pdb | wc -l`
-        if [[ ! -f ${drudedir}/${i}/${j}/equil/${sysname}.${i}.drude.silcs.${j}.npt.pdb ]]; then
-          echo "NO DRUDE EQUIL PDB FOUND FOR THIS RUN"
+        if [[ ! -f ${drudedir}/${i}/${j}/equil/${sysname}.${i}.drude.silcs.${j}.npt.crd ]]; then
+          echo "NO DRUDE EQUIL CRD FOUND FOR THIS RUN"
           exit 1
         fi
       else
         nligatoms=0
-        if [[ ! -f ${drudedir}/${i}/${j}/equil/${sysname}.${i}.drude.silcs.${j}.npt.pdb ]]; then
-        echo "${i} ${j} NO DRUDE EQUIL PDB FOUND FOR THIS RUN"
+        if [[ ! -f ${drudedir}/${i}/${j}/equil/${sysname}.${i}.drude.silcs.${j}.npt.crd ]]; then
+        echo "${i} ${j} NO DRUDE EQUIL CRD FOUND FOR THIS RUN"
         continue 1
         fi
       fi
@@ -168,7 +214,7 @@ run_drude ()
       equildir=${drudedir}/${i}/${j}/equil
       proddir=${drudedir}/${i}/${j}/prod
 
-      cp ${equildir}/${sysname}.${i}.drude.silcs.${j}.npt.pdb ${proddir}
+      cp ${equildir}/${sysname}.${i}.drude.silcs.${j}.npt.crd ${proddir}
       cp ${equildir}/${sysname}.drude.silcs.xplor.psf ${proddir}
         
     done
@@ -180,20 +226,18 @@ run_drude ()
 
   # activate conda env to use MDAnalysis
   #module reset
-  #module load Anaconda3/2020.11
-
   module load Anaconda3/2020.11
-
   source activate /projects/lemkul_lab/software/infer/openmm/7.7.0/conda_envs/openmm7.7.0 
+
 #  which python
 
   # create restraint file
   if [[ ${customres} == "" ]]; then
-    python ${SILCSBIODIR}/drude_silcs/scripts/make_restraint_silcs.py -pdb ${drudedir}/1/10/equil/${sysname}.1.drude.silcs.10.npt.pdb 
+    python ${SILCSBIODIR}/drude_silcs/scripts/make_restraint_silcs.py -crd ${drudedir}/1/10/equil/${sysname}.1.drude.silcs.10.npt.crd 
   else 
     echo "Running SILCS with custom restraints on "\"${customres}\"""
-    echo "python make_restraint_silcs.py -pdb ${sysname}.drude.silcs.npt.pdb -use_custom "\"${customres}\"""
-    python ${SILCSBIODIR}/drude_silcs/scripts/make_restraint_silcs.py -pdb ${drudedir}/1/10/equil/${sysname}.1.drude.silcs.10.npt.pdb -use_custom "\"${customres}\""
+    echo "python make_restraint_silcs.py -crd ${sysname}.drude.silcs.npt.crd -use_custom "\"${customres}\"""
+    python ${SILCSBIODIR}/drude_silcs/scripts/make_restraint_silcs.py -crd ${drudedir}/1/10/equil/${sysname}.1.drude.silcs.10.npt.crd -use_custom "\"${customres}\""
   fi
 
   # create production submission files

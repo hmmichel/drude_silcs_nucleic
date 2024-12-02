@@ -78,7 +78,6 @@ drudedir="${workdir}/2e_run_drude"
 temp=298
 
 
-
 if [[ $# -lt 1 ]]; then
     show_usage
     if ["`ls ${setupdir}/* -d| wc -l`" -gt 0 ]; then
@@ -179,9 +178,6 @@ run_drude ()
   cd ${drudedir}
 
   # activate conda env to use MDAnalysis
-  #module reset
-  #module load Anaconda3/2020.11
-
   module purge
   module load slurm
   module load shared

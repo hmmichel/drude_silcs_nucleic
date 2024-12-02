@@ -18,7 +18,7 @@ drudedir=<drudedir>
 run=<run>
 
 module reset
-#module load Anaconda3/2020.11
+module load Anaconda3/2020.11
 
 # Activate my Conda Enviroment with openMM+plumed
 source activate /projects/lemkul_lab/software/infer/openmm/7.7.0/conda_envs/openmm7.7.0
@@ -34,8 +34,8 @@ echo $CUDA_VISIBLE_DEVICES
 export CUDA_VISIBLE_DEVICES=0
 for j in {10..100..10}; do
     if cd ${drudedir}/${run}/${j}/prod ; then
-        python ${SILCSBIODIR}/drude_silcs/Production_drude_silcs.py \
-            -pdb ${sysname}.${run}.drude.silcs.${j}.npt.pdb  \
+        python ${SILCSBIODIR}/drude_silcs/scripts/Production_drude_silcs_crd.py \
+            -crd ${sysname}.${run}.drude.silcs.${j}.npt.crd  \
             -psf ${drudedir}/${run}/${j}/equil/${sysname}.drude.silcs.xplor.psf \
             -toppar ${drudedir}/toppar_drude_silcs_openmm.str \
             -state ${drudedir}/${run}/${j}/equil/${sysname}.${run}.drude.silcs.${j}.npt.rst \

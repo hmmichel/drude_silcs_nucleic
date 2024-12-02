@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --output <jobname>-<run>-build.out
 #SBATCH --job-name <jobname>-<run>-build
-#SBATCH --ntasks 64
-#SBATCH --nodes=2
+#SBATCH --ntasks 24
+#SBATCH --nodes=1
 #SBATCH -t 24:00:00
 #SBATCH -p <qname>
 #SBATCH -A <account>
@@ -28,7 +28,7 @@ export CHARMM=/projects/lemkul_lab/software/infer/charmm/charmm.MPI
 
 for j in {10..100..10}; do
     if cd ${drudedir}/${run}/${j}/build ; then
-        mpirun -np 64 ${CHARMM} -i write_drude_psf_silcs.inp -o write_drude.out
+        mpirun -np 24 ${CHARMM} -i write_drude_psf_silcs.inp -o write_drude.out
         wait
     else 
         echo "${drudedir}/${run}/${j}/build does not exist. Maybe you should have thought of that before submitting this script. -Patrick"
