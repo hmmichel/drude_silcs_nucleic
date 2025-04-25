@@ -18,7 +18,7 @@ open read card unit 10 name @moltype.crd
 read sequence coor unit 10 resid
 generate @moltype first 5TER last 3TER setup warn drude dmass 0.4 hype hord 4 khyp 40000 rhyp 0.2
 
-if @moltype .eq. "DNAA" then
+if @moltype .eq. DNAA then
 set i 1
 set nres @nres 
 label patch1
