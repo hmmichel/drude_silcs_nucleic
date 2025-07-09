@@ -110,7 +110,7 @@ image byseg xcen ?XAVE ycen ?YAVE zcen ?ZAVE sele segid PROA end
 image byres xcen ?XAVE ycen ?YAVE zcen ?ZAVE sele .not. segid PROA end
 
 ! calculate Fourier grid
-system "python2 checkfft.py ?XTLA ?XTLB ?XTLC > checkfft.str"
+system "python3 checkfft.py ?XTLA ?XTLB ?XTLC > checkfft.str"
 stream checkfft.str
 
 nbonds atom vatom switch vswitch -
