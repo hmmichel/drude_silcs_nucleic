@@ -180,7 +180,7 @@ run_drude ()
       
       # copy specific setup and interval file in correct directory
       cp ${setupdir}/${i}/${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ${builddir}  
-      cp /projects/lemkul_lab/share/4rakshitha/silcs/falcon/scripts/checkfft.py ${builddir}
+      cp ${SILCSBIODIR}/drude_silcs/scripts/checkfft.py ${builddir}
 
       if [[ "${strands}" != "1" ]]; then   
       
@@ -189,17 +189,14 @@ run_drude ()
             ${SILCSBIODIR}/drude_silcs/silcs-rna/write_drude_psf_silcs_multistrand.tmpl > ${builddir}/write_drude_psf_silcs.inp
 
         cd ${builddir}
-
         # convert gmx pdb format to acceptable charmm format and create stream file needed to write drude psf
         python3 ${SILCSBIODIR}/drude_silcs/silcs-rna/convert_gmx2drude_na_multistrand.py ${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ${sysname}_converted_drude.crd ${ions} ${strands}
       else
         sed -e "s/<sysname>/${sysname}/g" \
             -e "s~<topstr>~${drudedir}/~g" \
-            /projects/lemkul_lab/share/4rakshitha/silcs/falcon/silcs-rna/write_drude_psf_silcs.tmpl > ${builddir}/write_drude_psf_silcs.inp
+            ${SILCSBIODIR}/drude_silcs/scripts/write_drude_psf_silcs.tmpl > ${builddir}/write_drude_psf_silcs.inp
 	
-        
-	cd ${builddir}
-
+	    cd ${builddir}
         # convert gmx pdb format to acceptable charmm format and create stream file needed to write drude psf
         python3 ${SILCSBIODIR}/drude_silcs/silcs-rna/convert_gmx2drude_na.py ${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ${sysname}_converted_drude.crd ${ions} ${strands} 
       fi
@@ -223,7 +220,7 @@ run_drude ()
 	-e "s/<account>/${account}/g" \
 	-e "s/<email>/${email}/g" \
 	-e "s/<qname>/${qname}/g" \
-        /projects/lemkul_lab/share/4rakshitha/silcs/falcon/templates/job_drude_silcs_build.tmpl > ${drudedir}/${i}/sub_drude_silcs_build.sh
+        ${SILCSBIODIR}/drude_silcs/templates/job_drude_silcs_build.tmpl > ${drudedir}/${i}/sub_drude_silcs_build.sh
   
     nbadlinks=`find . -xtype l | wc -l`
 

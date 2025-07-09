@@ -205,7 +205,7 @@ gen_maps () {
         -e "s/<account>/${account}/g" \
         -e "s/<email>/${email}/g" \
         -e "s/<qname>/${qname}/g" \
-	/projects/lemkul_lab/share/4rakshitha/silcs/falcon/silcs-rna/job_gen_maps_drude.tmpl > ${mapdir}/sub_maps_drude.${i}.sh
+	${SILCSBIODIR}/drude_silcs/silcs-rna/job_gen_maps_drude.tmpl > ${mapdir}/sub_maps_drude.${i}.sh
 
   cd ${mapdir}
 

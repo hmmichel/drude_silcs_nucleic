@@ -196,7 +196,7 @@ run_drude ()
 	-e "s/<account>/${account}/g" \
   	-e "s/<email>/${email}/g" \
 	-e "s/<qname>/${qname}/g" \
-        /projects/lemkul_lab/share/4rakshitha/silcs/falcon/templates/job_drude_silcs_equil.tmpl > ${drudedir}/${i}/sub_drude_silcs_equil.sh
+        ${SILCSBIODIR}/drude_silcs/templates/job_drude_silcs_equil.tmpl > ${drudedir}/${i}/sub_drude_silcs_equil.sh
 
     
     nbadlinks=`find . -xtype l | wc -l`
