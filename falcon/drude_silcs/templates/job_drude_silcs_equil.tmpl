@@ -1,0 +1,58 @@
+#!/bin/bash
+#SBATCH --output <jobname>-<run>-equil.out
+#SBATCH --job-name <jobname>-<run>-equil
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:1
+#SBATCH -t 144:00:00
+#SBATCH -p <qname>
+#SBATCH -A <account>
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=<email>
+
+qname=<qname>
+account=<account>
+email=<email>
+sysname=<sysname>
+drudedir=<drudedir>
+run=<run>
+temp=<temp>
+
+module reset
+module load Miniconda3/24.7.1-0
+
+# Activate my Conda Enviroment with openMM+plumed
+source activate /projects/lemkul_lab/software/infer/openmm/7.7.0/conda_envs/openmm7.7.0
+
+# Export CATDCD
+export PATH=$PATH:/projects/lemkul_lab/software/infer/bin/
+
+# Change to the directory from which the job was submitted
+cd $SLURM_SUBMIT_DIR
+
+# ONLY needed if you are using more than one gpu
+#echo "Total visible devices:"
+#echo $CUDA_VISIBLE_DEVICES
+
+# Run simulation
+#export CUDA_VISIBLE_DEVICES=0
+
+for j in {10..100..10}; do
+    if cd ${drudedir}/${run}/${j}/equil ; then
+        python ${SILCSBIODIR}/drude_silcs/scripts/EquNPT_drude_crd.py \
+            -psf ${sysname}.drude.silcs.xplor.psf \
+            -crd ${sysname}.silcs.min.drude.crd \
+            -toppar ${drudedir}/toppar_drude_silcs_openmm.str \
+            -restraint_file restraint_atoms.dat \
+            -state_c36 ${sysname}_boxsize.rst \
+            -temp ${temp} \
+            -runtime 1000 \
+            -dt 1 \
+            -savefreq 10 \
+            -printfreq 10 \
+            -outname ${sysname}.${run}.drude.silcs.${j}.npt > EquNPT_drude_${run}_${j}.log 
+    else 
+        echo "${drudedir}/${run}/${j}/equil does not exist; please check your script and try again"
+    fi
+done 
+
+

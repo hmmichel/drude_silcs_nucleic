@@ -1,0 +1,37 @@
+#!/bin/bash
+#SBATCH --output <jobname>-<run>-build.out
+#SBATCH --job-name <jobname>-<run>-build
+#SBATCH --ntasks 24
+#SBATCH --nodes=1
+#SBATCH -t 24:00:00
+#SBATCH -p <qname>
+#SBATCH -A <account>
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=<email>
+#SBATCH --gres=gpu:1
+
+qname=<qname>
+account=<account>
+email=<email>
+sysname=<sysname>
+drudedir=<drudedir>
+run=<run>
+nproc=<nproc>
+
+module reset
+module load GCCcore/13.3.0
+module load OpenMPI/5.0.3-GCC-13.3.0
+module load FFTW.MPI/3.3.10-gompi-2024a
+
+export CHARMM=/projects/lemkul_lab/software/infer/charmm/c49b1.t4.MPI
+#CHARMM=/usr/local/bin/charmm
+
+
+for j in {10..100..10}; do
+    if cd ${drudedir}/${run}/${j}/build ; then
+        mpirun -np 24 ${CHARMM} -i write_drude_psf_silcs.inp -o write_drude.out
+        wait
+    else 
+        echo "${drudedir}/${run}/${j}/build does not exist. Maybe you should have thought of that before submitting this script. -Patrick"
+    fi
+done

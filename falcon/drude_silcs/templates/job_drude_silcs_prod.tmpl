@@ -1,0 +1,57 @@
+#!/bin/bash
+#SBATCH --output <jobname>.<run>.out
+#SBATCH --job-name <jobname>.<run>
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:1
+#SBATCH -t 144:00:00
+#SBATCH -p <qname>
+#SBATCH -A <account>
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=<email>
+
+qname=<qname>
+account=<account>
+email=<email>
+sysname=<sysname>
+fcsilcs=<fcsilcs>
+drudedir=<drudedir>
+run=<run>
+temp=<temp>
+
+module reset
+module load Anaconda3/2020.11
+
+# Activate my Conda Enviroment with openMM+plumed
+source activate /projects/lemkul_lab/software/infer/openmm/7.7.0/conda_envs/openmm7.7.0
+which python
+
+# Change to the directory from which the job was submitted
+cd $SLURM_SUBMIT_DIR
+
+echo "Total visible devices:"
+echo $CUDA_VISIBLE_DEVICES
+
+# Run simulation
+export CUDA_VISIBLE_DEVICES=0
+for j in {10..100..10}; do
+    if cd ${drudedir}/${run}/${j}/prod ; then
+        python ${SILCSBIODIR}/drude_silcs/scripts/Production_drude_silcs_crd.py \
+            -crd ${sysname}.${run}.drude.silcs.${j}.npt.crd  \
+            -psf ${drudedir}/${run}/${j}/equil/${sysname}.drude.silcs.xplor.psf \
+            -toppar ${drudedir}/toppar_drude_silcs_openmm.str \
+            -state ${drudedir}/${run}/${j}/equil/${sysname}.${run}.drude.silcs.${j}.npt.rst \
+            -restraint_file ${drudedir}/restraint_silcs.dat \
+            -temp ${temp} \
+            -fc_silcs ${fcsilcs} \
+            -firststride 1 \
+            -runtime 10000 \
+            -nstride 2 \
+            -dt 1 \
+            -savefreq 10 \
+            -printfreq 10 \
+            -temp 298 \
+            -outname ${sysname}.${run}.drude.silcs.${j} > Production_drude_${run}_${j}.log 
+    else 
+        echo "${drudedir}/${run}/${j}/prod does not exist; please check your script and try again"
+    fi
+done 
