@@ -106,6 +106,7 @@ with open(output_file, "w") as fullout, open("system_properties.str", "w") as st
             elif resn == str(ions): 
                 segid = "HETA"
                 nheta += 1
+                resnr = nheta
 
             elif resn == 'SOL':
                 segid = "SOLV"

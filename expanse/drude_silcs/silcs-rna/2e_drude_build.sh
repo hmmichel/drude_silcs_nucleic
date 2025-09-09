@@ -184,11 +184,11 @@ run_drude ()
       if [[ "${strands}" != "0" ]]; then   
       
         sed -e "s/<sysname>/${sysname}/g" \
-            -e "s~<topstr>~${drudedir}/~g" \
+            -e "s~<topstr>~${drudedir}~g" \
             ${SILCSBIODIR}/drude_silcs/silcs-rna/write_drude_psf_silcs_multistrand.tmpl > ${builddir}/write_drude_psf_silcs.inp
       else
         sed -e "s/<sysname>/${sysname}/g" \
-            -e "s~<topstr>~${drudedir}/~g" \
+            -e "s~<topstr>~${drudedir}~g" \
             ${SILCSBIODIR}/drude_silcs/silcs-rna/write_drude_psf_silcs.tmpl > ${builddir}/write_drude_psf_silcs.inp
       fi
 
