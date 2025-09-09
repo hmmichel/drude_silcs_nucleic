@@ -185,7 +185,7 @@ run_drude ()
       if [[ "${strands}" != "1" ]]; then   
       
         sed -e "s/<sysname>/${sysname}/g" \
-            -e "s~<topstr>~${drudedir}/~g" \
+            -e "s~<topstr>~${drudedir}~g" \
             ${SILCSBIODIR}/drude_silcs/silcs-rna/write_drude_psf_silcs_multistrand.tmpl > ${builddir}/write_drude_psf_silcs.inp
 
         cd ${builddir}
@@ -193,7 +193,7 @@ run_drude ()
         python3 ${SILCSBIODIR}/drude_silcs/silcs-rna/convert_gmx2drude_na_multistrand.py ${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ${sysname}_converted_drude.crd ${ions} ${strands}
       else
         sed -e "s/<sysname>/${sysname}/g" \
-            -e "s~<topstr>~${drudedir}/~g" \
+            -e "s~<topstr>~${drudedir}~g" \
             ${SILCSBIODIR}/drude_silcs/scripts/write_drude_psf_silcs.tmpl > ${builddir}/write_drude_psf_silcs.inp
 	
 	    cd ${builddir}
