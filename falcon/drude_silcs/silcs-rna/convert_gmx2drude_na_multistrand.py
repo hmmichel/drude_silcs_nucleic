@@ -129,6 +129,7 @@ with open(output_file, "w") as fullout, open("system_properties.str", "w") as st
 			elif resn == str(ions): 
 				segid = "HETA"
 				nheta += 1
+				resnr = nheta
 
 			elif resn == 'SOL':
 				segid = "SOLV"
@@ -269,7 +270,7 @@ with open(output_file, "w") as fullout, open("system_properties.str", "w") as st
 	for x in range(0,int(nstrands)):
 		base = moltype[:3]	# account for DNA or RNA
 		newmoltype =  base + alphamap[x]
-		counter = x + 1 	# fix zero-based numbering for readability
+		counter = x + 1		# fix zero-based numbering for readability
 		strout.write("set moltype" + str(counter) + " " + str(newmoltype) + "\n")
 	strout.write("set mol atoms " + str(nmolatoms) + "\n")
 	strout.write("set nres " + str(nres) + "\n")

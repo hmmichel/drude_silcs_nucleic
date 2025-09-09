@@ -174,7 +174,7 @@ run_drude ()
       cp ${setupdir}/${i}/${PROT_PDB}_silcs.${i}.prod.${j}.rec.pdb ${builddir}       
       
       sed -e "s/<sysname>/${sysname}/g" \
-          -e "s~<topstr>~${drudedir}/~g" \
+          -e "s~<topstr>~${drudedir}~g" \
           ${SILCSBIODIR}/drude_silcs/silcs/write_drude_psf_silcs.tmpl > ${builddir}/write_drude_psf_silcs.inp
       
       cp ${SILCSBIODIR}/drude_silcs/scripts/checkfft.py ${builddir}
