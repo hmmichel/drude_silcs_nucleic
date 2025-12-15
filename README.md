@@ -2,8 +2,10 @@ Drude SILCS Scripts
 ==================
 
 This repository contains scripts for running Drude polarizable simulations
-in OpenMM as part of the Drude SILCS workflow. Processes are automated for
-proteins and nucleic acids (DNA and RNA, with multiple chains supported).
+in OpenMM as part of the Drude SILCS-Nucleic workflow. Processes are automated for
+nucleic acids (DNA and RNA, with multiple chains supported). 
+
+The force field files provided are developmental but correspond to the files used in the Drude SILCS-Nucleic paper. Official force field files should be obtained from http://mackerell.umaryland.edu for all other purposes.
 
 Principal Authors and Contributors
 ----------------------------------
