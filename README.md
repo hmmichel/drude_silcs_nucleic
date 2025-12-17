@@ -31,6 +31,7 @@ The Drude SILCS-Nucleic workflow requirese the following software and libraries
 - Python
 - LOOS
 - Anaconda3
+- CHARMM
 
 ### Python Packages
 
@@ -47,6 +48,28 @@ The following Python packages are required (may be installed via `pip` or `conda
   
 ## Usage
 
+### Step 2e: Build Drude Systems
+```
+$ bash $SILCSBIODIR/drude_silcs/silcs-rna/2e_drude_build.sh prot=system.pdb sysname=pdb_code toppardir=/expanse/lustre/projects/vpt121/hmichel/toppar_drude_silcs_rna qname=gpu-shared account=vpt121 email=user@example.com
+````
+### Step 2f: Drude Equilibration
+````
+$ bash $SILCSBIODIR/drude_silcs/silcs-rna/2f_drude_equil.sh prot=system.pdb sysname=pdb_code toppardir=/path/to/ff_files qname=partition_name account=your_account email=user@example.com
+````
+### Step 2g: Drude Production
+````
+$ bash $SILCSBIODIR/drude_silcs/silcs-rna/2g_drude_prod.sh prot=system.pdb sysname=pdb_code fcsilcs=50.208 customres="segid DNAA and (resid 3 or resid 4 or resid 14) and name P" qname=partition_name account=your_account email=user@example.com
+````
+
+### Step 2h: Generate Drude FragMaps
+````
+$ bash ${SILCSBIODIR}/drude_silcs/silcs-rna/2h_gen_maps_drude.sh prot=system.pdb sysname=pdb_code qname=partition_name account=your_account email=user@example.com
+````
+
+### Step 2i: Combine Drude FragMaps
+````
+$ bash ${SILCSBIODIR}/drude_silcs/silcs-rna/2i_drude_combine_maps.sh prot=system.pdb sysname=pdb_code qname=partition_name account=your_account email=user@example.com
+````
 
 Principal Authors and Contributors
 ----------------------------------
