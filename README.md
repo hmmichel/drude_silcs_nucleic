@@ -27,11 +27,11 @@ The Drude SILCS-Nucleic workflow requirese the following software and libraries
 
 ### Required Software
 - SILCSBio v2023.5
-- OpenMM v
+- OpenMM v7.7
 - Python
-- LOOS
+- LOOS 
 - Anaconda3
-- CHARMM
+- CHARMM vc48b1 (MPI enabled)
 
 ### Python Packages
 
