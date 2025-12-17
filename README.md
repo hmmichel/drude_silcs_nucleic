@@ -1,4 +1,4 @@
-Drude SILCS Scripts
+Drude SILCS-Nucleic Scripts
 ==================
 
 This repository contains scripts for running **Drude polarizable simulations**
